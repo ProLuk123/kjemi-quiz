@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kjemi 2 Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 750px; }
+    h1 { text-align: center; font-size: 1.8rem; margin-bottom: 6px; color: #38bdf8; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 28px; font-size: 0.9rem; }
+    .progress-bar { background: #1e293b; border-radius: 999px; height: 8px; margin-bottom: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); border-radius: 999px; transition: width 0.4s ease; }
+    .progress-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+    .card { background: #1e293b; border-radius: 16px; padding: 28px; border: 1px solid #334155; }
+    .tag-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .tag { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+    .tag-real { background: #1e3a5f; color: #38bdf8; border: 1px solid #38bdf8; }
+    .tag-own { background: #1a3a1a; color: #4ade80; border: 1px solid #4ade80; }
+    .tag-topic { background: #2d1b6e; color: #a78bfa; border: 1px solid #a78bfa; }
+    .question { font-size: 1.05rem; line-height: 1.7; margin-bottom: 22px; color: #f1f5f9; white-space: pre-line; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option { background: #0f172a; border: 2px solid #334155; border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: all 0.18s; font-size: 0.97rem; color: #e2e8f0; text-align: left; line-height: 1.5; }
+    .option:hover:not(:disabled) { border-color: #38bdf8; background: #162032; }
+    .option.correct { border-color: #22c55e !important; background: #14532d !important; color: #bbf7d0 !important; }
+    .option.wrong { border-color: #ef4444 !important; background: #450a0a !important; color: #fecaca !important; }
+    .option:disabled { cursor: default; }
+    .feedback { margin-top: 18px; padding: 16px; border-radius: 10px; font-size: 0.93rem; line-height: 1.7; display: none; }
+    .feedback.show { display: block; }
+    .feedback.ok { background: #14532d; border: 1px solid #22c55e; color: #bbf7d0; }
+    .feedback.no { background: #450a0a; border: 1px solid #ef4444; color: #fecaca; }
+    .feedback strong { display: block; font-size: 1rem; margin-bottom: 8px; }
+    .sol { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
+    .sol-title { font-weight: 700; margin-bottom: 6px; color: #fbbf24; }
+    .next-btn { margin-top: 16px; width: 100%; padding: 13px; background: linear-gradient(90deg, #38bdf8, #818cf8); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; display: none; transition: opacity 0.2s; }
+    .next-btn:hover { opacity: 0.88; }
+    .next-btn.show { display: block; }
+    .results { text-align: center; display: none; }
+    .results.show { display: block; }
+    .score-circle { width: 130px; height: 130px; border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; font-weight: 700; }
+    .results h2 { font-size: 1.5rem; margin-bottom: 10px; }
+    .results > p { color: #94a3b8; margin-bottom: 24px; }
+    .weak-box { background: #1e293b; border-radius: 12px; padding: 18px; text-align: left; margin-bottom: 20px; border: 1px solid #334155; }
+    .weak-box h3 { color: #f59e0b; margin-bottom: 12px; font-size: 0.95rem; }
+    .weak-box ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .weak-box li { color: #fcd34d; font-size: 0.88rem; padding: 6px 10px; background: #422006; border-radius: 6px; border-left: 3px solid #f59e0b; }
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .restart-btn { padding: 12px 32px; background: #1e293b; border: 2px solid #38bdf8; border-radius: 10px; color: #38bdf8; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .restart-btn:hover { background: #38bdf8; color: #0f172a; }
+    .start-screen { text-align: center; }
+    .start-screen p { color: #94a3b8; margin-bottom: 16px; line-height: 1.6; }
+    .filter-section { margin-bottom: 20px; }
+    .filter-label { color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .filter-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .filter-btn { padding: 8px 20px; border-radius: 999px; border: 2px solid #334155; background: #1e293b; color: #94a3b8; cursor: pointer; font-size: 0.88rem; transition: all 0.2s; }
+    .filter-btn.active { border-color: #38bdf8; background: #162032; color: #38bdf8; }
+    .filter-btn.active-green { border-color: #4ade80; background: #162032; color: #4ade80; }
+    .start-btn { padding: 14px 48px; background: linear-gradient(90deg, #38bdf8, #818cf8); border: none; border-radius: 10px; color: white; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-top: 8px; }
+    .start-btn:hover { opacity: 0.88; }
+    .stats-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat { background: #1e293b; border-radius: 10px; padding: 12px 20px; border: 1px solid #334155; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; color: #38bdf8; }
+    .stat-label { font-size: 0.75rem; color: #64748b; }
+    .legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; font-size: 0.8rem; color: #94a3b8; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-blue { background: #38bdf8; }
+    .dot-green { background: #4ade80; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- START -->
+  <div id="start-screen" class="start-screen">
+    <h1>⚗️ Kjemi 2 Quiz</h1>
+    <p class="subtitle">Ekte tentamenoppgaver + egne øvingsoppgaver</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num" id="q-count">80</div><div class="stat-label">Spørsmål</div></div>
+      <div class="stat"><div class="stat-num">10</div><div class="stat-label">Temaer</div></div>
+    </div>
+    <div class="legend">
+      <span><div class="dot dot-blue"></div> Ekte tentamen</span>
+      <span><div class="dot dot-green"></div> Øvingsoppgave</span>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">Velg type</div>
+      <div class="filter-row">
+        <button class="filter-btn active" id="btn-real" onclick="toggleType('real',this)">Ekte tentamen</button>
+        <button class="filter-btn active-green" id="btn-own" onclick="toggleType('own',this)">Øvingsoppgaver</button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">Velg tema</div>
+      <div class="filter-row" id="topic-filters"></div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">Start quiz →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen" style="display:none">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-text">
+      <span id="progress-text"></span>
+      <span id="score-text"></span>
+    </div>
+    <div class="card">
+      <div class="tag-row">
+        <span class="tag" id="tag-type"></span>
+        <span class="tag tag-topic" id="tag-topic"></span>
+      </div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="next-btn">Neste →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results-screen">
+    <div class="score-circle" id="score-display"></div>
+    <h2 id="results-title"></h2>
+    <p id="results-msg"></p>
+    <div class="weak-box" id="weak-box" style="display:none">
+      <h3>⚠️ Repeter disse temaene:</h3>
+      <ul id="weak-list"></ul>
+    </div>
+    <div class="btn-row">
+      <button class="restart-btn" onclick="restartSame()">Ta igjen</button>
+      <button class="restart-btn" onclick="backToStart()">Meny</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const Q = [
+  // ===================== EKTE TENTAMEN =====================
+  { type:'real', topic:'Likevekt',
+    q:'En lukket beholder på 2 L tilføres 2 mol NOCl(g).\n2NOCl(g) ⇌ 2NO(g) + Cl₂(g),  K = 3,75·10⁻⁶ mol/L\nHvilken påstand stemmer?',
+    o:['Ved likevekt er det mer produkter enn reaktanter.','Ved likevekt er [NO] større enn [Cl₂].','Dette er en heterogen likevekt.','Likevekten forskyves til høyre hvis volumet minker til 1 L.'],
+    c:1, s:'K er svært liten → mest reaktanter. Av det lille som dannes er forholdet 2NO:1Cl₂ → [NO] > [Cl₂]. Volum-minkning forskyver til høyre for netto gassøkning (2→3 mol gass), men K er så liten at det uansett er mest reaktanter.' },
+
+  { type:'real', topic:'Syrer og baser',
+    q:'En liter 0,5 mol/L eddiksyre ble tilsatt 0,25 mol NaOH. Hvilket utsagn er IKKE riktig?',
+    o:['Det er 0,25 mol OH⁻ i løsningen etter blandingen.','Det ble dannet 0,25 mol vann.','Konsentrasjonen av Na⁺ er 0,25 mol/L.','Løsningen har pH ≈ 4,7.'],
+    c:0, s:'A er feil: OH⁻ reagerer fullstendig med eddiksyre (CH₃COOH + OH⁻ → CH₃COO⁻ + H₂O). Ingen OH⁻ gjenstår. Resultatet er en buffer med lik mengde syre og base → pH = pKa ≈ 4,7.' },
+
+  { type:'real', topic:'Løselighet / Ksp',
+    q:'Løseligheten til jern(III)hydroksid er høyere…',
+    o:['enn løseligheten til jern(II)hydroksid','i en basisk løsning enn i vann','i HCl enn i vann','i Fe(NO₃)₃(aq) enn i vann'],
+    c:2, s:'I HCl reagerer H⁺ med OH⁻: Fe(OH)₃ + 3H⁺ → Fe³⁺ + 3H₂O. Likevekten forskyves mot høyre → mer løser seg. I basisk løsning felles mer ut. Fe(NO₃)₃ gir fellesioneffekt (Fe³⁺) → lavere løselighet.' },
+
+  { type:'real', topic:'Kromatografi',
+    q:'Separasjon av heksan-1-ol og oktan-1-ol på TLC-plate med polar stasjonærfase og heptan som løpemiddel. Hva er riktig?',
+    o:['Heksan-1-ol danner i mindre grad bindinger til stasjonærfasen enn oktan-1-ol.','Oktan-1-ol vil ha lavest Rf-verdi.','Oktan-1-ol har høyere løselighet i heptan enn heksan-1-ol.','Heksan-1-ol vil vandre lengst på platen.'],
+    c:2, s:'Oktan-1-ol har lengre karbonkjede → mer upolar → bedre løselig i upolar heptan → vandrer lenger opp → høyere Rf. Heksan-1-ol er mer polar → sterkere binding til polar stasjonærfase → lavere Rf.' },
+
+  { type:'real', topic:'Elektrokjemi',
+    q:'Hvilken blanding vil reagere spontant?',
+    o:['ZnSO₄(aq) og Cu(s)','Zn(s) og AgNO₃(aq)','MgSO₄(aq) og Fe(s)','Ag(s) og CuSO₄(aq)'],
+    c:1, s:'Zn er mer reaktivt enn Ag (høyere i aktivitetsrekken). Zn(s) + 2Ag⁺(aq) → Zn²⁺(aq) + 2Ag(s). E° = E°Ag - E°Zn = 0,80 - (-0,76) = +1,56 V > 0 → spontan.' },
+
+  { type:'real', topic:'Oksidasjonstall',
+    q:'I hvilken forbindelse har klor lavest oksidasjonstall?',
+    o:['HCl','Cl₂','HClO₃','ClF'],
+    c:0, s:'HCl: Cl = -1 (lavest mulig). Cl₂: Cl = 0. HClO₃: Cl = +5. ClF: F er alltid -1, Cl = +1.' },
+
+  { type:'real', topic:'Organisk kjemi',
+    q:'14 g eten og 71 g klorgass reagerer. Utbytte 80 %. Hva dannes?',
+    o:['26 g kloretan','40 g 1,2-dikloretan','52 g kloretan','79 g 1,2-dikloretan'],
+    c:1, s:'Addisjonsreaksjon: C₂H₄ + Cl₂ → C₂H₄Cl₂ (1,2-dikloretan). Mol eten = 14/28 = 0,5 mol (begrensende). Teoretisk: 0,5 × 99 = 49,5 g. Med 80%: ≈ 40 g.' },
+
+  { type:'real', topic:'Galvanisk celle',
+    q:'Hva er riktig om en galvanisk celle som leverer strøm?',
+    o:['Ved anoden skjer reduksjon.','Saltbroen fører elektroner fra katode til anode.','Katoden er den negative elektroden.','Elektroner vandrer i ytre leder fra anode til katode.'],
+    c:3, s:'D: Elektroner går fra anode (negativ, oksidasjon) gjennom ytre leder til katode (positiv, reduksjon). Saltbroen fører ioner (ikke elektroner). Anode = oksidasjon, ikke reduksjon.' },
+
+  { type:'real', topic:'Elektrolyse',
+    q:'2Al₂O₃(l) + 3C(s) → 4Al(l) + 3CO₂(g). Hva er riktig om produksjonen?',
+    o:['Reaksjonen er eksoterm.','Atomeffektiviteten er under 50 %.','Aluminium dannes på anoden.','Det går 2 mol e⁻ for å danne 27 g Al.'],
+    c:1, s:'Atomeffektivitet = 4×27/(4×27+3×44) = 108/240 = 45% < 50%. Elektrolyse er endoterm. Al dannes på katoden (reduksjon: Al³⁺ + 3e⁻ → Al). 1 mol Al (27g) krever 3 mol e⁻.' },
+
+  { type:'real', topic:'Entropi',
+    q:'I hvilken prosess øker entropien?',
+    o:['2ZnS(s) + 3O₂(g) → 2ZnO(s) + 2SO₂(g)','CH₂=CH₂(g) + H₂O(g) → CH₃CH₂OH(g)','2NO(g) → N₂(g) + O₂(g)','H₂O(s) → H₂O(l)'],
+    c:3, s:'D: Is smelter → mer uorden → økt entropi. A: 3 mol gass → 2 mol gass = minker. B: 2 mol gass → 1 mol gass = minker. C: 2 mol gass → 2 mol gass, men N₂ og O₂ er enklere molekyler, liten endring.' },
+
+  { type:'real', topic:'Reaksjonstyper',
+    q:'Hvilken reaksjonstype skjer når aminosyrer kobles til protein?',
+    o:['Addisjonsreaksjon','Kondensasjonsreaksjon','Redoksreaksjon','Hydrolysereaksjon'],
+    c:1, s:'Kondensasjon: to molekyler kobles + vann frigjøres. Peptidbinding dannes mellom -COOH og -NH₂ med fjerning av H₂O. Hydrolyse er det motsatte (bryter ned proteinet).' },
+
+  { type:'real', topic:'Buffer',
+    q:'Hvilket stoff er best egnet som basisk komponent i en buffer med pH = 4,7?',
+    o:['Hydrogensitrat','Eddiksyre','Hydrogentartrat','Dihydrogensitrat'],
+    c:0, s:'pH ≈ pKa. Sitronsyre har pKa₂ ≈ 4,8. Bufferparet: Dihydrogensitrat (syre) / Hydrogensitrat (basisk komponent = konjugert base). Eddiksyre og Dihydrogensitrat er syrer.' },
+
+  { type:'real', topic:'Syrer og baser',
+    q:'Hvilket salt gir basisk løsning i vann?',
+    o:['CaCl₂','K₂HPO₄','Na₂SO₄','Fe(NO₃)₃'],
+    c:1, s:'K₂HPO₄: HPO₄²⁻ er konjugert base av svak syre → hydrolyse → basisk. CaCl₂ og Na₂SO₄: sterk+sterk = nøytral. Fe(NO₃)₃: Fe³⁺ hydrolyserer til sur løsning.' },
+
+  { type:'real', topic:'Oksidasjonstall',
+    q:'I hvilke to forbindelser har svovel samme oksidasjonstall?',
+    o:['SF₆ og Na₂SO₄','S₈ og NaHSO₃','SO₂ og H₂SO₄','H₂S og SO₃'],
+    c:0, s:'SF₆: S = +6 (F alltid -1). Na₂SO₄: SO₄²⁻, S = +6. Begge +6! S₈: S=0. NaHSO₃: S=+4. SO₂: S=+4. H₂SO₄: S=+6. H₂S: S=-2. SO₃: S=+6.' },
+
+  { type:'real', topic:'Elektrolyse',
+    q:'Hva dannes på anoden ved elektrolyse av Na₂SO₄(aq)?',
+    o:['Na(s)','S₈(g)','H₂(g)','O₂(g)'],
+    c:3, s:'Anode = oksidasjon. Vann oksideres lettere enn SO₄²⁻: 2H₂O → O₂ + 4H⁺ + 4e⁻. Na dannes aldri fra vandig løsning. H₂ dannes på katoden.' },
+
+  { type:'real', topic:'Organisk kjemi',
+    q:'32 g metanol og 30 g etansyre kondensasjonsreaksjon, 40 % utbytte. Hva dannes?',
+    o:['30 g etylmetanat','15 g metyletanat','30 g metyletanat','15 g etylmetanat'],
+    c:1, s:'CH₃OH + CH₃COOH → metyletanat + H₂O. Mol etansyre = 30/60 = 0,5 mol (begrensende). Teoretisk: 0,5×74 = 37 g. Med 40%: ≈15 g metyletanat.' },
+
+  { type:'real', topic:'Galvanisk celle',
+    q:'Galvanisk celle med Cu og Ag. Hva er riktig?',
+    o:['Reduksjon av Cu²⁺ skjer.','Cellepotensialet er 1,14 V.','Cellen kan ikke levere strøm.','Elektroner vandrer fra Cu til Ag i ytre leder.'],
+    c:3, s:'Cu er mer reaktivt enn Ag → Cu oksideres (anode), Ag⁺ reduseres (katode). Elektroner: Cu→Ag. E° = 0,80-0,34 = 0,46 V (ikke 1,14). Reaksjonen er spontan.' },
+
+  { type:'real', topic:'Buffer',
+    q:'0,50 mol KOH tilsettes 1,0 L eddiksyreløsning → buffer dannes. Hva var [eddiksyre]?',
+    o:['0,05 mol/L','0,25 mol/L','0,50 mol/L','0,75 mol/L'],
+    c:3, s:'For buffer trengs CH₃COOH og CH₃COO⁻. 0,50 mol KOH forbruker 0,50 mol syre. For at noe syre gjenstår må c > 0,50 mol/L. Med 0,75 mol/L: 0,25 mol syre igjen + 0,50 mol acetat → buffer.' },
+
+  { type:'real', topic:'Buffer',
+    q:'Hvilke to stoffer kan vi blande og få en buffer?',
+    o:['NaOH og CH₃COONa','HCl og CH₃COONa','CH₃COOH og NH₃','HNO₃ og NaNO₃'],
+    c:1, s:'HCl + CH₃COONa → CH₃COOH + NaCl. Nå har du CH₃COONa (base) og CH₃COOH (syre) = bufferpar! NaOH+acetat = bare base. CH₃COOH+NH₃ er ikke et konjugert par. HNO₃+NaNO₃ = sterk syre, ingen buffer.' },
+
+  { type:'real', topic:'Elektrolyse',
+    q:'Halvreaksjon for reduksjon ved elektrolyse av Na₂SO₄(aq)?',
+    o:['Na⁺ + e⁻ → Na','2H⁺ + 2e⁻ → H₂','2H₂O → O₂ + 4H⁺ + 4e⁻','S + 2e⁻ → S²⁻'],
+    c:1, s:'Katode = reduksjon. Vann (H⁺) reduseres i vandig løsning: 2H⁺ + 2e⁻ → H₂. Na⁺ reduseres ikke fra vandig løsning. C er oksidasjon (anode).' },
+
+  { type:'real', topic:'Entropi',
+    q:'Hvilket stoff har lavest entropi?',
+    o:['H₂O(s)','H₂O(l)','N₂(g)','H₂O(g)'],
+    c:0, s:'S(fast) < S(flytende) < S(gass). Is er mest ordnet → lavest entropi.' },
+
+  { type:'real', topic:'Elektrokjemi',
+    q:'Hva reagerer spontant i en løsning med Cu²⁺-ioner?',
+    o:['Ag(s)','Au(s)','Zn²⁺(aq)','Fe(s)'],
+    c:3, s:'Fe er mer reaktivt enn Cu: Fe(s) + Cu²⁺(aq) → Fe²⁺(aq) + Cu(s). E° = 0,34-(-0,44) = +0,78 V > 0 → spontan. Ag og Au er mindre reaktive enn Cu.' },
+
+  { type:'real', topic:'Reaksjonstyper',
+    q:'Etanol og propansyre reagerer i ett trinn. Hva er organisk produkt?',
+    o:['Propyletanat','Etylpropyleter','Propyletyleter','Etylpropanat'],
+    c:3, s:'Kondensasjonsreaksjon (esterifisering): etanol + propansyre → etylpropanat + vann. Alkoholdelen navngis først (etyl), så syre-delen (propanoat).' },
+
+  { type:'real', topic:'Organisk kjemi',
+    q:'Enzymet i en enzymkatalysert reaksjon — hva er riktig?',
+    o:['Enzymet øker reaksjonsfarten.','Enzymet forskyver likevekten mot produktsiden.','Enzymet brukes opp i reaksjonen.','Enzymet øker aktiveringsenergien.'],
+    c:0, s:'Enzymer er biologiske katalysatorer: senker aktiveringsenergien → øker farten. De forskyver IKKE likevekten, gjenvinnes (ikke forbrukt), og øker IKKE aktiveringsenergien.' },
+
+  // ===================== EGNE ØVINGSOPPGAVER =====================
+  { type:'own', topic:'Galvanisk celle',
+    q:'I en galvanisk celle med Zn og Cu elektroder — hva skjer?',
+    o:['Zn oksideres på katoden','Cu oksideres på anoden','Zn oksideres på anoden','Cu reduseres på anoden'],
+    c:2, s:'Zn er mer reaktivt (høyere oppe i aktivitetsrekken). Zn oksideres = anode. Cu²⁺ reduseres = katode. Elektroner vandrer fra Zn-elektroden (anode) til Cu-elektroden (katode).' },
+
+  { type:'own', topic:'Galvanisk celle',
+    q:'Hva er cellepotensialet for en Zn/Cu celle?\nE°(Zn²⁺/Zn) = -0,76 V,  E°(Cu²⁺/Cu) = +0,34 V',
+    o:['−1,10 V','0,42 V','1,10 V','−0,42 V'],
+    c:2, s:'E°celle = E°katode − E°anode = 0,34 − (−0,76) = 1,10 V. Positivt svar bekrefter at reaksjonen er spontan (galvanisk celle).' },
+
+  { type:'own', topic:'Elektrolyse',
+    q:'Ved elektrolyse av smeltet NaCl (ikke vandig løsning) — hva dannes på katoden?',
+    o:['Cl₂(g)','Na(l)','H₂(g)','O₂(g)'],
+    c:1, s:'I smeltet NaCl er det ingen vann. Katode = reduksjon: Na⁺ + e⁻ → Na(l). Cl₂ dannes på anoden (oksidasjon av Cl⁻). H₂ og O₂ dannes bare hvis vann er til stede.' },
+
+  { type:'own', topic:'Elektrolyse',
+    q:'Hvor mye Ag avsettes ved elektrolyse av AgNO₃(aq) når 9650 C ladning passerer?\n(F = 96 500 C/mol, M(Ag) = 108 g/mol)',
+    o:['1,08 g','10,8 g','108 g','0,108 g'],
+    c:1, s:'n(e⁻) = 9650/96500 = 0,10 mol. Ag⁺ + e⁻ → Ag → 1 mol e⁻ per mol Ag. n(Ag) = 0,10 mol. m = 0,10 × 108 = 10,8 g.' },
+
+  { type:'own', topic:'Likevekt',
+    q:'Likevekten N₂(g) + 3H₂(g) ⇌ 2NH₃(g), ΔH = −92 kJ/mol\nHva skjer når temperaturen økes?',
+    o:['Mer NH₃ dannes','Likevekten forskyves mot venstre','Ingen endring siden K er konstant','Mer H₂ forbrukes'],
+    c:1, s:'Reaksjonen er eksoterm (ΔH < 0). Økt temperatur → likevekten forskyves mot venstre (Le Chatelier: motvirker varmetilførselen) → mindre NH₃, mer N₂ og H₂.' },
+
+  { type:'own', topic:'Likevekt',
+    q:'K = [NH₃]²/([N₂][H₂]³) = 0,5. Hva betyr dette?',
+    o:['Det er omtrent like mye reaktanter og produkter','Det er mer reaktanter enn produkter','Det er mer produkter enn reaktanter','Reaksjonen er ikke spontan'],
+    c:1, s:'K < 1 → nevneren (reaktanter) > telleren (produkter) → mest reaktanter ved likevekt. K = 1 betyr omtrent like mye. K > 1 betyr mest produkter.' },
+
+  { type:'own', topic:'Syrer og baser',
+    q:'pH = 3 i en saltsyreløsning. Hva er konsentrasjonen av H⁺?',
+    o:['3 mol/L','0,003 mol/L','0,001 mol/L','1×10⁻³ mol/L'],
+    c:3, s:'pH = -log[H⁺] → [H⁺] = 10⁻ᵖᴴ = 10⁻³ = 0,001 mol/L = 1×10⁻³ mol/L. HCl er sterk syre → dissosier fullstendig.' },
+
+  { type:'own', topic:'Syrer og baser',
+    q:'0,10 mol/L NH₃-løsning, Kb = 1,8×10⁻⁵. Hva er pH?',
+    o:['11,13','2,87','5,00','9,00'],
+    c:0, s:'NH₃ + H₂O ⇌ NH₄⁺ + OH⁻. x² = Kb × c = 1,8×10⁻⁵ × 0,10 = 1,8×10⁻⁶. x = [OH⁻] = 1,34×10⁻³. pOH = 2,87. pH = 14 − 2,87 = 11,13.' },
+
+  { type:'own', topic:'Buffer',
+    q:'En buffer består av eddiksyre (pKa = 4,75) og acetat. pH = 5,05. Hva er forholdet [acetat]/[eddiksyre]?',
+    o:['0,5','1,0','2,0','10'],
+    c:2, s:'Henderson-Hasselbalch: pH = pKa + log([base]/[syre]) → 5,05 = 4,75 + log([acetat]/[eddiksyre]) → log = 0,30 → [acetat]/[eddiksyre] = 10⁰·³⁰ = 2,0.' },
+
+  { type:'own', topic:'Buffer',
+    q:'Hva skjer med pH i en buffer når du tilsetter litt sterk syre?',
+    o:['pH synker drastisk','pH holdes nesten konstant','pH øker','pH = 7'],
+    c:1, s:'En buffer motstår pH-endringer. Den basiske komponenten nøytraliserer den tilsatte syren: A⁻ + H⁺ → HA. pH endres bare minimalt innenfor bufferkapasiteten.' },
+
+  { type:'own', topic:'Termodynamikk',
+    q:'ΔG = ΔH − TΔS. Hvilken kombinasjon gir alltid spontan reaksjon?',
+    o:['ΔH > 0 og ΔS > 0','ΔH < 0 og ΔS < 0','ΔH < 0 og ΔS > 0','ΔH > 0 og ΔS < 0'],
+    c:2, s:'ΔG = ΔH − TΔS. For spontan: ΔG < 0. Hvis ΔH < 0 (eksotterm) og ΔS > 0 (entropi øker) → ΔG alltid negativ ved alle temperaturer → alltid spontan.' },
+
+  { type:'own', topic:'Termodynamikk',
+    q:'ΔH = +100 kJ/mol og ΔS = +200 J/(mol·K). Ved hvilken temperatur er reaksjonen spontan?',
+    o:['Under 500 K','Over 500 K','Aldri spontan','Alltid spontan'],
+    c:1, s:'ΔG = ΔH − TΔS. Sett ΔG = 0: T = ΔH/ΔS = 100000/200 = 500 K. Over 500 K: TΔS > ΔH → ΔG < 0 → spontan. Under 500 K: ΔG > 0 → ikke spontan.' },
+
+  { type:'own', topic:'Organisk kjemi',
+    q:'Hvilken reaksjonstype skjer når glukose brytes ned i fordøyelsen?',
+    o:['Addisjonsreaksjon','Kondensasjonsreaksjon','Hydrolysereaksjon','Substitusjonsreaksjon'],
+    c:2, s:'Hydrolyse: vann bryter bindingene i stivelse/disakkarider → enkle sukkermolekyler. Vann adderes over bindingene (motsatt av kondensasjon).' },
+
+  { type:'own', topic:'Organisk kjemi',
+    q:'Hvilken type binding dannes mellom to aminosyrer i et protein?',
+    o:['Esterbinding','Peptidbinding','Glykosidbinding','Disulfidbinding'],
+    c:1, s:'Peptidbinding: dannes mellom -COOH til én aminosyre og -NH₂ til neste (kondensasjonsreaksjon med fjerning av H₂O). Esterbinding er mellom syre og alkohol.' },
+
+  { type:'own', topic:'Oksidasjonstall',
+    q:'Hva er oksidasjonstallet til N i HNO₃?',
+    o:['-3','0','+3','+5'],
+    c:3, s:'I HNO₃: H = +1, O = -2. Sum = 0: +1 + N + 3(-2) = 0 → N = +5. Husk: HNO₃ er sterk syre der N er svært oksidert.' },
+
+  { type:'own', topic:'Oksidasjonstall',
+    q:'Hva er oksidasjonstallet til Mn i KMnO₄?',
+    o:['+2','+4','+6','+7'],
+    c:3, s:'K = +1, O = -2. Sum = 0: +1 + Mn + 4(-2) = 0 → Mn = +7. KMnO₄ (kaliumpermanganat) er et sterkt oksiderende middel der Mn er i høyeste oksidasjonstall.' },
+
+  { type:'own', topic:'Løselighet / Ksp',
+    q:'Ksp for AgCl = 1,8×10⁻¹⁰. Hva er løseligheten (mol/L)?',
+    o:['1,8×10⁻¹⁰ mol/L','1,3×10⁻⁵ mol/L','9×10⁻¹¹ mol/L','3,6×10⁻¹⁰ mol/L'],
+    c:1, s:'AgCl ⇌ Ag⁺ + Cl⁻. Ksp = x² = 1,8×10⁻¹⁰ → x = √(1,8×10⁻¹⁰) = 1,3×10⁻⁵ mol/L.' },
+
+  { type:'own', topic:'Løselighet / Ksp',
+    q:'Blander du 100 mL 0,001 mol/L AgNO₃ med 100 mL 0,001 mol/L NaCl. Feller AgCl ut?\nKsp(AgCl) = 1,8×10⁻¹⁰',
+    o:['Nei, Q < Ksp','Ja, Q > Ksp','Nei, Q = Ksp','Umulig å si'],
+    c:1, s:'Etter blanding: [Ag⁺] = [Cl⁻] = 0,0005 mol/L = 5×10⁻⁴. Q = (5×10⁻⁴)² = 2,5×10⁻⁷. Q >> Ksp (1,8×10⁻¹⁰) → utfelling!' },
+
+  { type:'own', topic:'Kromatografi',
+    q:'I gasskromatografi — hvilket stoff elueres først?',
+    o:['Stoffet med høyest kokepunkt','Stoffet med lavest kokepunkt','Stoffet som er mest polart','Stoffet med høyest molarmasse'],
+    c:1, s:'I GC separeres stoffer etter kokepunkt. Lavt kokepunkt = svake intermolekylære krefter = vandrer raskest gjennom kolonnen = elueres først (lavest retensjonstid).' },
+
+  { type:'own', topic:'Kromatografi',
+    q:'En TLC-analyse gir Rf = 0,80 for stoff A og Rf = 0,40 for stoff B (polar stasjonærfase). Hva er riktig?',
+    o:['Stoff A er mer polart enn B','Stoff B er mer polart enn A','Stoff A og B er like polare','Rf sier ingenting om polaritet'],
+    c:1, s:'Lav Rf = bindes sterkere til polar stasjonærfase = mer polart stoff. Stoff B (Rf=0,40) bindes sterkere → mer polart. Stoff A (Rf=0,80) er mer upolar → vandrer lenger.' },
+
+  { type:'own', topic:'Aminosyrer',
+    q:'En aminosyre har pI = 6,0. Ved pH = 9,0 — hvilken form har den?',
+    o:['H₃N⁺-CHR-COOH (positiv)','H₃N⁺-CHR-COO⁻ (zwitterion)','H₂N-CHR-COO⁻ (negativ)','Blanding av alle former'],
+    c:2, s:'pH = 9,0 >> pI = 6,0 → basisk løsning → aminosyren avgir H⁺ → negativ form: H₂N-CHR-COO⁻. Huskeregel: sur = positiv, nøytral (pH=pI) = zwitterion, basisk = negativ.' },
+
+  { type:'own', topic:'Aminosyrer',
+    q:'Hvorfor kan to ulike aminosyrer A og B danne to ulike dipeptider?',
+    o:['Fordi de har ulike sidekjeder','Fordi N-enden til A kan binde seg til C-enden til B, og omvendt','Fordi peptidbindingen kan rotere','Fordi pH er forskjellig'],
+    c:1, s:'A-B: A sin COOH reagerer med B sin NH₂. B-A: B sin COOH reagerer med A sin NH₂. Rekkefølgen er ulik → to forskjellige dipeptider med ulike egenskaper.' },
+
+  { type:'own', topic:'Reaksjonstyper',
+    q:'Hvilken reaksjonstype er dette?\nCH₂=CH₂ + HBr → CH₃-CH₂Br',
+    o:['Substitusjonsreaksjon','Kondensasjonsreaksjon','Addisjonsreaksjon','Eliminasjonsreaksjon'],
+    c:2, s:'Addisjonsreaksjon: HBr adderer over dobbeltbindingen i eten. Ingen atomer fjernes. Markovnikov: H fester seg til C med flest H, Br til C med færrest H.' },
+
+  { type:'own', topic:'Reaksjonstyper',
+    q:'Hva er den omvendte reaksjonen av kondensasjon?',
+    o:['Oksidasjon','Addisjonsreaksjon','Hydrolyse','Eliminasjon'],
+    c:2, s:'Hydrolyse: vann bryter bindinger (pept-, ester-, glykosidbindinger). Kondensasjon danner bindinger + frigjør vann. Hydrolyse bruker vann + bryter bindingene.' },
+
+  { type:'own', topic:'Termodynamikk',
+    q:'En reaksjon har ΔG = −80 kJ/mol. Hva er riktig?',
+    o:['Reaksjonen er endoterm','Reaksjonen er ikke-spontan','Reaksjonen er spontan','Reaksjonen trenger en katalysator'],
+    c:2, s:'ΔG < 0 → spontan reaksjon. ΔG sier ingenting direkte om temperatur (eksoterm/endoterm = ΔH). Spontan betyr at reaksjonen går av seg selv (men kan gå sakte uten katalysator).' },
+
+  { type:'own', topic:'Termodynamikk',
+    q:'Hva sier fortegnet på ΔS når is smelter til vann?',
+    o:['ΔS < 0 (entropi minker)','ΔS = 0 (ingen endring)','ΔS > 0 (entropi øker)','Umulig å si'],
+    c:2, s:'Fast stoff → flytende: molekylene får mer frihet → økt uorden → ΔS > 0. Generelt: smelting, fordamping, oppløsning øker entropi (ΔS > 0).' },
+
+  { type:'own', topic:'Syrer og baser',
+    q:'Hvilken løsning er mest basisk?',
+    o:['0,1 mol/L NaOH','0,1 mol/L NH₃ (Kb = 1,8×10⁻⁵)','0,1 mol/L Na₂CO₃','0,1 mol/L NaHCO₃'],
+    c:0, s:'NaOH er en sterk base → dissosier fullstendig → [OH⁻] = 0,1 mol/L → pOH = 1 → pH = 13. NH₃ er svak base (pH ≈ 11,1). Na₂CO₃ er basisk salt (pH ≈ 11-12). NaHCO₃ er svakt basisk (pH ≈ 8-9).' },
+
+  { type:'own', topic:'Syrer og baser',
+    q:'Titrering: svak syre titreres med sterk base. Hva er pH ved ekvivalenspunktet?',
+    o:['pH = 7','pH < 7','pH > 7','Umulig å si'],
+    c:2, s:'Svak syre + sterk base → konjugert base (svakt basisk salt). Den konjugerte basen hydrolyser vann → OH⁻ → pH > 7. Husk: sterk+sterk = 7, svak syre+sterk base = over 7, svak base+sterk syre = under 7.' },
+
+  { type:'own', topic:'Oksidasjonstall',
+    q:'Hvilken reaksjon er en redoksreaksjon?\nZn + 2HCl → ZnCl₂ + H₂',
+    o:['Ja, dette er redoks','Nei, dette er en syrebase-reaksjon','Nei, dette er kondensasjon','Nei, dette er addisjonsreaksjon'],
+    c:0, s:'Ja: Zn går fra 0 til +2 (oksideres). H går fra +1 til 0 (reduseres). Oksidasjonstallene endres → redoksreaksjon. Syrebase og redoks kan begge skje, men her er det tydelig redoks.' },
+
+  { type:'own', topic:'Likevekt',
+    q:'2SO₂(g) + O₂(g) ⇌ 2SO₃(g)\nHva skjer med K hvis temperaturen økes? (Reaksjonen er eksoterm)',
+    o:['K øker','K minker','K er uendret','K = 1 alltid'],
+    c:1, s:'K endres med temperatur. For eksoterm reaksjon: økt temperatur → likevekten forskyves mot reaktantene → mindre produkter → K minker. For endoterm: K øker med temperatur.' },
+
+  { type:'own', topic:'Løselighet / Ksp',
+    q:'Hva skjer med løseligheten til Ca(OH)₂ når pH økes?',
+    o:['Løseligheten øker','Løseligheten minker','Løseligheten er uendret','Ca(OH)₂ er uløselig'],
+    c:1, s:'Ca(OH)₂ ⇌ Ca²⁺ + 2OH⁻. Ved høy pH (mye OH⁻ allerede i løsning) → fellesioneffekt → likevekten forskyves mot venstre → Ca(OH)₂ feller ut → lavere løselighet.' },
+
+  { type:'own', topic:'Kromatografi',
+    q:'Hva brukes tynnsjiktkromatografi til i kjemi?',
+    o:['Å måle pH i en løsning','Å separere og identifisere stoffer i en blanding','Å beregne molarmasse til et stoff','Å måle konsentrasjonen av ioner'],
+    c:1, s:'TLC brukes til å separere stoffer i en blanding og identifisere dem ved å sammenligne Rf-verdier med kjente standarder. Brukes bl.a. i krimteknikk og legemiddelkontroll.' },
+
+  { type:'own', topic:'Aminosyrer',
+    q:'Hva kalles bindingen mellom to sukkermolekyler?',
+    o:['Peptidbinding','Esterbinding','Glykosidbinding','Hydrogenbinding'],
+    c:2, s:'Glykosidbinding: dannes mellom to sukkerenheter ved kondensasjonsreaksjon (vann frigjøres). Stivelse og cellulose er bygget opp av glukoser koblet med glykosidbindinger.' },
+
+  { type:'own', topic:'Reaksjonstyper',
+    q:'En sekundær alkohol reagerer med HBr. Hva er reaksjonstype og produkt?',
+    o:['Addisjonsreaksjon → dibromalkan','Eliminasjonsreaksjon → alken','Substitusjonsreaksjon → haloalkan','Kondensasjon → ester'],
+    c:2, s:'Substitusjonsreaksjon: OH erstattes av Br. R₂CHOH + HBr → R₂CHBr + H₂O. Går via karbokation (SN1). Ikke addisjonsreaksjon (ingen dobbeltbinding).' },
+
+  { type:'own', topic:'Termodynamikk',
+    q:'Forholdet ΔG = −nFE° brukes til å koble termodynamikk og elektrokjemi. Hva er n?',
+    o:['Antall mol produkt','Antall mol elektroner overført','Cellepotensialet','Faradays konstant'],
+    c:1, s:'n = antall mol elektroner overført i redoksreaksjonen. F = Faradays konstant (96 485 C/mol). E° = standard cellepotensial. ΔG < 0 (spontan) når E° > 0.' },
+
+  { type:'own', topic:'Buffer',
+    q:'Hva er bufferkapasitet?',
+    o:['pH-verdien til bufferen','Hvor mye syre eller base bufferen kan nøytralisere uten stor pH-endring','Konsentrasjonen av den sure komponenten','pKa til buffersyren'],
+    c:1, s:'Bufferkapasitet = hvor mye H⁺ eller OH⁻ bufferen tåler før pH endres dramatisk. Høy konsentrasjon av bufferkomponentene → høy bufferkapasitet. Best bufferkapasitet når [base] = [syre] (pH = pKa).' },
+
+  { type:'own', topic:'Oksidasjonstall',
+    q:'Hva er oksidasjonstallet til Fe i Fe₂O₃?',
+    o:['+2','+3','0','+6'],
+    c:1, s:'O = -2. Sum = 0: 2Fe + 3(-2) = 0 → 2Fe = +6 → Fe = +3. Fe₂O₃ er jernrust der jern er i +3.' },
+
+  { type:'own', topic:'Elektrokjemi',
+    q:'En Ni-Cd celle har E°celle = 1,30 V. Hva er ΔG ved utlading hvis 2 mol e⁻ overføres?',
+    o:['−251 kJ','251 kJ','−130 kJ','130 kJ'],
+    c:0, s:'ΔG = −nFE° = −2 × 96485 × 1,30 = −250 861 J ≈ −251 kJ. Negativ ΔG → spontan (batteriet leverer strøm av seg selv).' },
+
+  { type:'own', topic:'Organisk kjemi',
+    q:'Hvilken av disse er en ester?',
+    o:['CH₃COOH','CH₃OH','CH₃COOCH₃','CH₃CHO'],
+    c:2, s:'CH₃COOCH₃ (metyletanat/metylacetat): dannet av eddiksyre + metanol ved kondensasjonsreaksjon. Kjennetegn: -COO- binding. CH₃COOH = syre, CH₃OH = alkohol, CH₃CHO = aldehyd.' },
+
+  { type:'own', topic:'Syrer og baser',
+    q:'Ka for eddiksyre = 1,8×10⁻⁵. Hva er Kb for acetat-ionen?',
+    o:['1,8×10⁻⁵','5,6×10⁻¹⁰','5,6×10⁻¹⁰','1,8×10⁻⁹'],
+    c:1, s:'Kb = Kw/Ka = 1,0×10⁻¹⁴ / 1,8×10⁻⁵ = 5,6×10⁻¹⁰. Sterk syre → svak konjugert base (lav Kb). Svak syre → sterkere konjugert base (høyere Kb).' },
+];
+
+const TOPICS = [...new Set(Q.map(q=>q.topic))].sort();
+let activeTypes = new Set(['real','own']);
+let activeTopics = new Set(TOPICS);
+let filtered=[], current=0, score=0, answered=false, wrongTopics={};
+
+// Build topic filter buttons
+const tf = document.getElementById('topic-filters');
+TOPICS.forEach(t=>{
+  const b = document.createElement('button');
+  b.className='filter-btn active';
+  b.textContent=t;
+  b.onclick=()=>toggleTopic(t,b);
+  tf.appendChild(b);
+});
+
+function updateCount(){
+  const n = Q.filter(q=>activeTypes.has(q.type)&&activeTopics.has(q.topic)).length;
+  document.getElementById('q-count').textContent=n;
+}
+
+function toggleType(type,btn){
+  if(activeTypes.has(type)){
+    if(activeTypes.size===1) return;
+    activeTypes.delete(type);
+    btn.classList.remove('active','active-green');
+  } else {
+    activeTypes.add(type);
+    btn.classList.add(type==='real'?'active':'active-green');
+  }
+  updateCount();
+}
+
+function toggleTopic(topic,btn){
+  if(activeTopics.has(topic)){
+    if(activeTopics.size===1) return;
+    activeTopics.delete(topic);
+    btn.classList.remove('active');
+    btn.style.opacity='0.4';
+  } else {
+    activeTopics.add(topic);
+    btn.classList.add('active');
+    btn.style.opacity='1';
+  }
+  updateCount();
+}
+
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
+
+function startQuiz(){
+  filtered=shuffle(Q.filter(q=>activeTypes.has(q.type)&&activeTopics.has(q.topic)));
+  current=0; score=0; wrongTopics={};
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  load();
+}
+
+function load(){
+  answered=false;
+  const q=filtered[current];
+  document.getElementById('progress-fill').style.width=(current/filtered.length*100)+'%';
+  document.getElementById('progress-text').textContent=`Spørsmål ${current+1} av ${filtered.length}`;
+  document.getElementById('score-text').textContent=`${score} riktige`;
+  const tt=document.getElementById('tag-type');
+  if(q.type==='real'){tt.textContent='Ekte tentamen';tt.className='tag tag-real';}
+  else{tt.textContent='Øvingsoppgave';tt.className='tag tag-own';}
+  document.getElementById('tag-topic').textContent=q.topic;
+  document.getElementById('question').textContent=q.q;
+  const od=document.getElementById('options');
+  od.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='option'; b.textContent=opt;
+    b.onclick=()=>answer(i);
+    od.appendChild(b);
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').innerHTML='';
+  document.getElementById('next-btn').className='next-btn';
+}
+
+function answer(i){
+  if(answered) return;
+  answered=true;
+  const q=filtered[current];
+  const opts=document.querySelectorAll('.option');
+  opts.forEach(b=>b.disabled=true);
+  opts[q.c].classList.add('correct');
+  const fb=document.getElementById('feedback');
+  if(i===q.c){
+    score++;
+    opts[i].classList.add('correct');
+    fb.className='feedback ok show';
+    fb.innerHTML=`<strong>✅ Riktig!</strong><div class="sol"><div class="sol-title">📖 Forklaring:</div>${q.s}</div>`;
+  } else {
+    opts[i].classList.add('wrong');
+    fb.className='feedback no show';
+    fb.innerHTML=`<strong>❌ Feil — riktig svar: ${String.fromCharCode(65+q.c)}</strong><div class="sol"><div class="sol-title">📖 Slik løser du det:</div>${q.s}</div>`;
+    wrongTopics[q.topic]=(wrongTopics[q.topic]||0)+1;
+  }
+  document.getElementById('score-text').textContent=`${score} riktige`;
+  const nb=document.getElementById('next-btn');
+  nb.className='next-btn show';
+  nb.textContent=current+1<filtered.length?'Neste spørsmål →':'Se resultater →';
+}
+
+document.getElementById('next-btn').onclick=()=>{
+  current++;
+  if(current<filtered.length) load();
+  else showResults();
+};
+
+function showResults(){
+  document.getElementById('quiz-screen').style.display='none';
+  const rs=document.getElementById('results-screen');
+  rs.classList.add('show');
+  const pct=Math.round(score/filtered.length*100);
+  document.getElementById('score-display').textContent=pct+'%';
+  let title,msg;
+  if(pct>=85){title='🔥 Imponerende!';msg=`${score} av ${filtered.length} riktige. Du er godt forberedt!`;}
+  else if(pct>=65){title='👍 Bra jobbet!';msg=`${score} av ${filtered.length} riktige. Litt mer øving på svake temaer.`;}
+  else{title='📚 Mer øving trengs';msg=`${score} av ${filtered.length} riktige. Fokuser på temaene nedenfor.`;}
+  document.getElementById('results-title').textContent=title;
+  document.getElementById('results-msg').textContent=msg;
+  const sorted=Object.entries(wrongTopics).sort((a,b)=>b[1]-a[1]);
+  if(sorted.length>0){
+    document.getElementById('weak-box').style.display='block';
+    const list=document.getElementById('weak-list');
+    list.innerHTML='';
+    sorted.forEach(([t,n])=>{
+      const li=document.createElement('li');
+      li.textContent=`⚠️ ${t} — ${n} feil`;
+      list.appendChild(li);
+    });
+  }
+}
+
+function restartSame(){
+  filtered=shuffle(filtered);
+  current=0; score=0; wrongTopics={};
+  document.getElementById('results-screen').classList.remove('show');
+  document.getElementById('quiz-screen').style.display='block';
+  load();
+}
+function backToStart(){
+  document.getElementById('results-screen').classList.remove('show');
+  document.getElementById('start-screen').style.display='block';
+}
+</script>
+</body>
+</html>
